@@ -22,7 +22,9 @@ class BotManager:
         application.add_handler(CommandHandler("start", self.admin_handler.start))
         application.add_handler(CommandHandler("addadmin", self.admin_handler.add_admin))
         application.add_handler(CommandHandler("addword", self.word_handler.add_word))
+        application.add_handler(CommandHandler("addwords", self.word_handler.add_word))
         application.add_handler(CommandHandler("removeword", self.word_handler.remove_word))
+        application.add_handler(CommandHandler("removewords", self.word_handler.remove_word))
         application.add_handler(CommandHandler("listwords", self.word_handler.list_words))
         application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, self.moderation_handler.handle_message)
