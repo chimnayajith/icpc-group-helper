@@ -1,29 +1,58 @@
+from telegram.ext import ConversationHandler, MessageHandler, filters
 class WordHandler:
+    WAITING_FOR_WORDS = 1 
     def __init__(self, data_manager):
         self.data_manager = data_manager
 
-    async def add_word(self, update, context):
+    async def start_add_word(self, update, context):
         if update.effective_user.id not in self.data_manager.admin_ids:
             await update.message.reply_text("Only admins can add banned words.")
-            return
+            return ConversationHandler.END
 
-        if not context.args:
-            await update.message.reply_text("Please provide at least one word to add.")
-            return
+        await update.message.reply_text(
+            "Please provide the banned words, each on a new line.\n"
+            "For example:\n"
+            "word1\n"
+            "word2\n"
+            "word3\n\n"
+            "You can type /cancel to stop this operation."
+        )
+        return self.WAITING_FOR_WORDS
 
-        new_words = []
-        for word in context.args:
-            word = word.lower()
-            if word not in self.data_manager.banned_words:
-                self.data_manager.banned_words.add(word)
-                new_words.append(word)
+    async def cancel(self, update, context):
+        await update.message.reply_text("Operation canceled.")
+        return ConversationHandler.END
 
-        self.data_manager.save_data()
+    async def receive_words(self, update, context):
+        if update.message.text.startswith("/"):
+            await update.message.reply_text("Operation canceled.")
+            return ConversationHandler.END
+
+        text = update.message.text.strip()
+        words = {word.strip().lower() for word in text.splitlines() if word.strip()}
+
+        if not words:
+            await update.message.reply_text("No valid words provided. Please try again.")
+            return ConversationHandler.END
+
+        new_words = words - self.data_manager.banned_words
 
         if new_words:
-            await update.message.reply_text(f"Added words: {', '.join(new_words)}.")
+            self.data_manager.banned_words.update(new_words)
+            try:
+                self.data_manager.save_data()
+                await update.message.reply_text(
+                    f"Added the following words to the banned list:\n- " + "\n- ".join(sorted(new_words))
+                )
+            except Exception as e:
+                await update.message.reply_text(f"Failed to save data: {e}")
         else:
-            await update.message.reply_text("No new words were added (they might already exist in the banned words list).")
+            await update.message.reply_text(
+                "No new words were added (they might already exist in the banned words list)."
+            )
+
+        return ConversationHandler.END
+
 
     async def remove_word(self, update, context):
         if update.effective_user.id not in self.data_manager.admin_ids:
@@ -63,4 +92,4 @@ class WordHandler:
             return
 
         words = "\n- ".join(sorted(self.data_manager.banned_words))
-        await update.message.reply_text(f"Banned words: {words}")
+        await update.message.reply_text(f"Banned words: \n- {words}")

@@ -1,4 +1,4 @@
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, ConversationHandler, filters
 from bot.handlers.admin_handler import AdminHandler
 from bot.handlers.word_handler import WordHandler
 from bot.handlers.moderation_handler import ModerationHandler
@@ -21,8 +21,21 @@ class BotManager:
         print("\nRegistering handlers...")
         application.add_handler(CommandHandler("start", self.admin_handler.start))
         application.add_handler(CommandHandler("addadmin", self.admin_handler.add_admin))
-        application.add_handler(CommandHandler("addword", self.word_handler.add_word))
-        application.add_handler(CommandHandler("addwords", self.word_handler.add_word))
+
+        application.add_handler(ConversationHandler(
+            entry_points=[CommandHandler("addword", self.word_handler.start_add_word)],
+            states={
+                WordHandler.WAITING_FOR_WORDS: [MessageHandler(filters.TEXT, self.word_handler.receive_words)],
+            },
+            fallbacks=[CommandHandler("cancel", self.word_handler.cancel)],
+        ))
+        application.add_handler(ConversationHandler(
+        entry_points=[CommandHandler("addwords", self.word_handler.start_add_word)],
+            states={
+                WordHandler.WAITING_FOR_WORDS: [MessageHandler(filters.TEXT, self.word_handler.receive_words)],
+            },
+            fallbacks=[CommandHandler("cancel", self.word_handler.cancel)],
+        ))
         application.add_handler(CommandHandler("removeword", self.word_handler.remove_word))
         application.add_handler(CommandHandler("removewords", self.word_handler.remove_word))
         application.add_handler(CommandHandler("listwords", self.word_handler.list_words))

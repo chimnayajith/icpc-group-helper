@@ -8,9 +8,9 @@ class AdminHandler:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Available commands:\n"
-            "- `/addadmin <user_id>1 <user_id2> ...` - Adds multiple new admins (only accessible to the original admin)\n",
-            "- `/addword <word1> <word2> ...` - Adds multiple banned words to the list\n",
-            "- `/removeword <word1> <word2> ...` - Removes multiple banned word from the list\n",
+            "- `/addadmin <user_id1> <user_id2> ...` - Adds multiple new admins (only accessible to the original admin)\n"
+            "- `/addword` - Initiates the process to add banned words. You will be prompted to input words, one per line. Type `/cancel` to stop at any time.\n"
+            "- `/removeword <word1> <word2> ...` - Removes multiple banned words from the list\n"
             "- `/listwords` - Lists all banned words"
         )
 
